@@ -32,16 +32,14 @@ app.get('/', async (req, res) => {
 });
 
 app.post('/', async (req, res) => {
-  const { text } = req.body;
+  let todo = new Todo(req.body);
 
-  if (typeof text !== 'string') {
+  if (typeof todo.text !== 'string') {
     res.status(400);
     res.json({ message: "invalid 'text' expected string" });
     return;
   }
 
-  let todo = new Todo();
-  todo.text = text;
   todo.completed = false;
   todo.save(function(err) {
     console.log(err);
@@ -55,7 +53,8 @@ app.post('/', async (req, res) => {
   // const todo = { id: id, text, completed: false };
   // await database.client.db('todos').collection('todos').insertOne(todo);
   res.status(201);
-  res.json(todo);
+  const todos = await Todo.find({});
+  res.json(todos);
 });
 
 app.put('/:id', async (req, res) => {

@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 
-
 import {
   Container,
   Typography,
@@ -17,9 +16,11 @@ import {
 import RLDD from 'react-list-drag-and-drop/lib/RLDD';
 
 const useStyles = makeStyles({
+  textField : {marginLeft: 5},
+  fixedTop: {position:'fixed',top:0,zIndex:1000, background:'#fff'},
   addTodoContainer: { padding: 10 },
   addTodoButton: { marginLeft: 5 },
-  todosContainer: { marginTop: 10, padding: 10 },
+  todosContainer: { marginTop: 150, padding: 10 },
   todoContainer: {
     borderTop: "1px solid #bfbfbf",
     marginTop: 5,
@@ -42,9 +43,17 @@ const useStyles = makeStyles({
 });
 
 function Todos() {
+
   const classes = useStyles();
   const [todos, setTodos] = useState([]);
-  const [newTodoText, setNewTodoText] = useState("");
+  const [state, setState] = useState({ text: "", dueDate: "" });
+  const handleChange = e => {
+    const { name, value } = e.target;
+    setState(prevState => ({
+      ...prevState,
+      [name]: value
+    }));
+  };
 
   useEffect(() => {
     fetch("http://localhost:3001/")
@@ -52,18 +61,20 @@ function Todos() {
       .then((todos) => setTodos(todos));
   }, [setTodos]);
 
-  function addTodo(text) {
+  function addTodo(stack) {
     fetch("http://localhost:3001/", {
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
       },
       method: "POST",
-      body: JSON.stringify({ text }),
+      body: JSON.stringify(state),
     })
       .then((response) => response.json())
-      .then((todo) => setTodos([...todos, todo]));
-    setNewTodoText("");
+      .then((todos) => {
+        setTodos(todos);
+        setState({text:'', dueDate: ''})
+      });
   }
 
   function toggleTodoCompleted(id) {
@@ -95,31 +106,48 @@ function Todos() {
 
   return (
     <Container maxWidth="md">
+      <Paper className={classes.fixedTop} maxWidth="md">
       <Typography variant="h3" component="h1" gutterBottom>
         Todos
       </Typography>
       <Paper className={classes.addTodoContainer}>
         <Box display="flex" flexDirection="row">
-          <Box flexGrow={1}>
+          <Box flexGrow={6}>
             <TextField
+              label="Task"
               fullWidth
-              value={newTodoText}
+              value={state.text}
               onKeyPress={(event) => {
                 if (event.key === "Enter") {
-                  addTodo(newTodoText);
+                  addTodo(state);
                 }
               }}
-              onChange={(event) => setNewTodoText(event.target.value)}
+              onChange={handleChange}
+              name='text'
+            />
+          </Box>
+          <Box flexGrow={0} >
+            <TextField
+                id="duedate"
+                label="Due date"
+                type="date"
+                value={state.dueDate}
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                onChange={handleChange}
+                name='dueDate'
             />
           </Box>
           <Button
             className={classes.addTodoButton}
             startIcon={<Icon>add</Icon>}
-            onClick={() => addTodo(newTodoText)}
+            onClick={() => addTodo(state)}
           >
             Add
           </Button>
         </Box>
+      </Paper>
       </Paper>
       {todos.length > 0 && (
         <Paper className={classes.todosContainer}>
@@ -141,7 +169,7 @@ function Todos() {
                         className={item.completed ? classes.todoTextCompleted : ""}
                         variant="body1"
                     >
-                      {item.text} {item.id} - {index}
+                      {item.text} {item.id} - {index} {item.dueDate}
                     </Typography>
                   </Box>
                   <Button

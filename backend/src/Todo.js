@@ -6,8 +6,9 @@ const autoIncrementModelID = require('./counter');
 const todo = new Schema({
     id: { type: Number, unique: true, min: 1 },
     text: { type: String },
+    dueDate: {type:Date},
+    position: {type:Number},
     completed: {type:Boolean},
-    position: {type:number},
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date }
 });
